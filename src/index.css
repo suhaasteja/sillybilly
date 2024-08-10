@@ -1,3 +1,15 @@
 *{
     box-sizing: border-box;
 }
+
+
+td{
+    border: 1px solid;
+}
+
+.table-cell{
+    min-width: 50px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
