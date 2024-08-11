@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 
-const TableCell = ({ val, handleCellAction, valIndex }) => {
+const TableCell = ({
+  val,
+  handleCellAction,
+  rowIndex,
+  valIndex,
+  from,
+  delAction,
+  editAction,
+}) => {
   const [isEdit, setIsEdit] = useState(false);
   const [input, setInput] = useState(val);
 
@@ -8,23 +16,20 @@ const TableCell = ({ val, handleCellAction, valIndex }) => {
     if (type == "edit") {
       setIsEdit(!isEdit);
     } else if (type == "del") {
-      handleCellAction("delHeader", input, valIndex);
+      handleCellAction("del", from, input, valIndex);
     }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    handleCellAction("editHeader", input, valIndex);
+    handleCellAction("edit", from, input, valIndex, rowIndex);
     setIsEdit(false);
   };
   return (
     <span>
       {isEdit ? (
         <form onSubmit={handleFormSubmit}>
-          <input
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
+          <input onChange={(e) => setInput(e.target.value)} value={input} />
           <button type="submit">submit</button>
         </form>
       ) : (
@@ -32,8 +37,12 @@ const TableCell = ({ val, handleCellAction, valIndex }) => {
       )}
       {!isEdit && (
         <>
-          <button onClick={() => handleAction("edit")}>edit</button>
-          <button onClick={() => handleAction("del")}>del</button>
+          {editAction && (
+            <button onClick={() => handleAction("edit")}>edit</button>
+          )}
+          {delAction && (
+            <button onClick={() => handleAction("del")}>del</button>
+          )}
         </>
       )}
     </span>
