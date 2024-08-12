@@ -1,24 +1,27 @@
 import React, { useState } from "react";
 
-const MemberForm = ({setMembers}) => {
-  const [input, setInput] = useState("");
-  const handleMemberFormSubmit = (e) => {
+const MemberForm = ({ addMember }) => {
+  const [memberName, setMemberName] = useState("");
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setMembers(prev => [...prev, input]);
-    setInput("");
+    if (memberName.trim()) {
+      addMember(memberName.trim());
+      setMemberName("");
+    }
   };
+
   return (
-    <div>
-      <form onSubmit={handleMemberFormSubmit}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="type member name"
-          required
-        />
-        <button type="submit">Add member</button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+      <input
+        type="text"
+        value={memberName}
+        onChange={(e) => setMemberName(e.target.value)}
+        placeholder="Enter member name"
+        required
+      />
+      <button type="submit">Add Member</button>
+    </form>
   );
 };
 

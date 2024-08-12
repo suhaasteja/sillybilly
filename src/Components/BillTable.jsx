@@ -1,26 +1,62 @@
 import React from "react";
 import TableCell from "./TableCell";
 
-const BillTable = ({ members, handleCellAction, items, memberSplits }) => {
+const BillTable = ({ tableContent, members, splitData, setSplitData, onEdit, onDelete, onEditMember, onDeleteMember, onToggleMember, totalSplits }) => {
+  const handleToggleSplit = (rowIndex, memberIndex, isChecked) => {
+    setSplitData((prevSplitData) => {
+      const updatedSplitData = [...prevSplitData];
+      const rowSplits = [...updatedSplitData[rowIndex]];
+
+      rowSplits[memberIndex].isChecked = isChecked;
+
+      const itemPrice = parseFloat(tableContent[rowIndex][1]);
+      const checkedCount = rowSplits.filter((split) => split.isChecked).length;
+      const splitAmount = checkedCount > 0 ? itemPrice / checkedCount : 0;
+
+      rowSplits.forEach((split) => {
+        split.splitAmount = split.isChecked ? splitAmount : 0;
+      });
+
+      updatedSplitData[rowIndex] = rowSplits;
+      return updatedSplitData;
+    });
+  };
+
+  const handleSelectAll = (rowIndex, isChecked) => {
+    setSplitData((prevSplitData) => {
+      const updatedSplitData = [...prevSplitData];
+      const rowSplits = updatedSplitData[rowIndex].map(() => ({
+        isChecked: isChecked,
+        splitAmount: isChecked ? parseFloat(tableContent[rowIndex][1]) / members.length : 0,
+      }));
+
+      updatedSplitData[rowIndex] = rowSplits;
+      return updatedSplitData;
+    });
+  };
+
   return (
-    <table>
-      {/* header */}
+    <table border="1" cellPadding="5" cellSpacing="0">
       <thead>
         <tr>
-          <th>action</th>
-          <th>index</th>
-          <th>item</th>
-          <th>price</th>
-          {members.map((mem, memIndex) => {
+          <th>Action</th>
+          <th>Select</th>
+          <th>Index</th>
+          <th>Item</th>
+          <th>Price</th>
+          {members.map((member, memberIndex) => {
+            const allSelected = splitData.every((rowSplits) => rowSplits[memberIndex].isChecked);
             return (
-              <th key={memIndex}>
+              <th key={memberIndex}>
                 <TableCell
-                  val={mem}
-                  handleCellAction={handleCellAction}
-                  valIndex={memIndex}
-                  from={"memberName"}
-                  delAction={true}
-                  editAction={true}
+                  content={member}
+                  isEdit={true} 
+                  onEdit={(newValue) => onEditMember(memberIndex, newValue)}
+                  isDel={true} 
+                  onDelete={() => onDeleteMember(memberIndex)}
+                  isCheckbox={true} 
+                  isChecked={allSelected}
+                  onToggleSplit={(isChecked) => onToggleMember(memberIndex, isChecked)}
                 />
               </th>
             );
@@ -28,66 +64,59 @@ const BillTable = ({ members, handleCellAction, items, memberSplits }) => {
         </tr>
       </thead>
       <tbody>
-        {items.map((item, itemIndex) => {
-          const { index, name, price } = item;
-
+        {tableContent.map((row, rowIndex) => {
+          const [itemName, itemPrice] = row;
+          const allSelected = splitData[rowIndex]?.every((split) => split.isChecked);
           return (
-            <tr key={itemIndex}>
-              {/* <TableCell>{index}</TableCell>
-              <TableCell>{name}</TableCell>
-              <TableCell>{price}</TableCell> */}
+            <tr key={rowIndex}>
               <td>
                 <TableCell
-                  val={""}
-                  handleCellAction={handleCellAction}
-                  valIndex={itemIndex}
-                  from={"actionCol"}
-                  delAction={true}
-                  editAction={false}
-                />
-              </td>
-              <td>{itemIndex + 1}</td>
-              <td>
-                <TableCell
-                  val={name}
-                  handleCellAction={handleCellAction}
-                  valIndex={itemIndex}
-                  from={"itemName"}
-                  delAction={false}
-                  editAction={true}
+                  content={"Delete"}
+                  isDel={true}
+                  onDelete={() => onDelete(rowIndex)}
                 />
               </td>
               <td>
                 <TableCell
-                  val={price}
-                  handleCellAction={handleCellAction}
-                  valIndex={itemIndex}
-                  from={"itemPrice"}
-                  delAction={false}
-                  editAction={true}
+                  isCheckbox={true}
+                  isChecked={allSelected}
+                  onToggleSplit={(isChecked) => handleSelectAll(rowIndex, isChecked)}
                 />
               </td>
-              {
-                members.map((_, memIndex) => {
-                  console.log("rowIndex", itemIndex);
-                  return (
-                    <td key={memIndex}>
-                        <TableCell 
-                          val={memberSplits[memIndex] || 0}
-                          handleCellAction={handleCellAction}
-                          valIndex={memIndex}
-                          rowIndex = {itemIndex}
-                          from={"memberSplit"}
-                          delAction={false}
-                          editAction={true}
-                        />
-                    </td>
-                  )
-                })
-              }
+              <td>
+                <TableCell content={rowIndex + 1} />
+              </td>
+              <td>
+                <TableCell content={itemName} />
+              </td>
+              <td>
+                <TableCell content={itemPrice} />
+              </td>
+              {members.map((_, memberIndex) => (
+                <td key={memberIndex}>
+                  <TableCell
+                    isCheckbox={true}
+                    isChecked={splitData[rowIndex][memberIndex].isChecked}
+                    splitAmount={splitData[rowIndex][memberIndex].splitAmount}
+                    onToggleSplit={(isChecked) =>
+                      handleToggleSplit(rowIndex, memberIndex, isChecked)
+                    }
+                  />
+                </td>
+              ))}
             </tr>
           );
         })}
+        {totalSplits && (
+          <tr>
+            <td colSpan="5" style={{ fontWeight: "bold" }}>Total Splits</td>
+            {totalSplits.map((total, index) => (
+              <td key={index} style={{ fontWeight: "bold" }}>
+                <TableCell content={total.toFixed(2)} />
+              </td>
+            ))}
+          </tr>
+        )}
       </tbody>
     </table>
   );

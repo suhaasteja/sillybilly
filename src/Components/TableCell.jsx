@@ -1,51 +1,69 @@
 import React, { useState } from "react";
 
 const TableCell = ({
-  val,
-  handleCellAction,
-  rowIndex,
-  valIndex,
-  from,
-  delAction,
-  editAction,
+  content,               
+  isDel = false,       
+  isCheckbox = false,  
+  isEdit = false,      
+  onToggleSplit,       
+  splitAmount,         
+  isChecked,           
+  onDelete,            
+  onEdit,              
 }) => {
-  const [isEdit, setIsEdit] = useState(false);
-  const [input, setInput] = useState(val);
+  const [isEditing, setIsEditing] = useState(false); 
+  const [inputValue, setInputValue] = useState(content);
 
-  const handleAction = (type) => {
-    if (type == "edit") {
-      setIsEdit(!isEdit);
-    } else if (type == "del") {
-      handleCellAction("del", from, input, valIndex);
-    }
-  };
-
-  const handleFormSubmit = (e) => {
+  const handleEditSubmit = (e) => {
     e.preventDefault();
-    handleCellAction("edit", from, input, valIndex, rowIndex);
-    setIsEdit(false);
+    if (onEdit) {
+      onEdit(inputValue);
+    }
+    setIsEditing(false);
   };
+
   return (
-    <span>
+    <div>
+      {isCheckbox && (
+        <label>
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={(e) => onToggleSplit && onToggleSplit(e.target.checked)}
+            style={{ marginRight: "5px" }}
+          />
+          {splitAmount !== undefined && <span>{splitAmount.toFixed(2)}</span>}
+        </label>
+      )}
+
+      {isDel && onDelete && (
+        <button onClick={onDelete} style={{ marginRight: "5px" }}>
+          Delete
+        </button>
+      )}
+
       {isEdit ? (
-        <form onSubmit={handleFormSubmit}>
-          <input onChange={(e) => setInput(e.target.value)} value={input} />
-          <button type="submit">submit</button>
-        </form>
+        isEditing ? (
+          <form onSubmit={handleEditSubmit}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onBlur={handleEditSubmit}
+              autoFocus
+              style={{ marginRight: "5px" }}
+            />
+            <button type="submit">Save</button>
+          </form>
+        ) : (
+          <span onDoubleClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+            {content}
+          </span>
+        )
       ) : (
-        val
+        <span>{content}</span>
       )}
-      {!isEdit && (
-        <>
-          {editAction && (
-            <button onClick={() => handleAction("edit")}>edit</button>
-          )}
-          {delAction && (
-            <button onClick={() => handleAction("del")}>del</button>
-          )}
-        </>
-      )}
-    </span>
+    </div>
   );
 };
 
