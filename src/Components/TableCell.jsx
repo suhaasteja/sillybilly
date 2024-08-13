@@ -1,22 +1,21 @@
 import React, { useState } from "react";
 
 const TableCell = ({
-  content,               
-  isDel = false,       
-  isCheckbox = false,  
-  isEdit = false,      
-  onToggleSplit,       
-  splitAmount,         
-  isChecked,           
-  onDelete,            
-  onEdit,              
+  content,
+  isDel = false,
+  isCheckbox = false,
+  isEdit = false,
+  onToggleSplit,
+  splitAmount,
+  isChecked,
+  onDelete,
+  onEdit,
 }) => {
-  const [isEditing, setIsEditing] = useState(false); 
+  const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(content);
 
-  const handleEditSubmit = (e) => {
-    e.preventDefault();
-    if (onEdit) {
+  const handleEditSubmit = () => {
+    if (onEdit && inputValue.trim() !== "") {
       onEdit(inputValue);
     }
     setIsEditing(false);
@@ -32,19 +31,13 @@ const TableCell = ({
             onChange={(e) => onToggleSplit && onToggleSplit(e.target.checked)}
             style={{ marginRight: "5px" }}
           />
-          {splitAmount !== undefined && <span>{splitAmount.toFixed(2)}</span>}
+          {splitAmount !== undefined && <span>{splitAmount.toFixed(3)}</span>}
         </label>
-      )}
-
-      {isDel && onDelete && (
-        <button onClick={onDelete} style={{ marginRight: "5px" }}>
-          Delete
-        </button>
       )}
 
       {isEdit ? (
         isEditing ? (
-          <form onSubmit={handleEditSubmit}>
+          <div>
             <input
               type="text"
               value={inputValue}
@@ -53,15 +46,24 @@ const TableCell = ({
               autoFocus
               style={{ marginRight: "5px" }}
             />
-            <button type="submit">Save</button>
-          </form>
+            <button onClick={handleEditSubmit}>Save</button>
+          </div>
         ) : (
-          <span onDoubleClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+          <span
+            onDoubleClick={() => setIsEditing(true)}
+            style={{ cursor: "pointer" }}
+          >
             {content}
           </span>
         )
       ) : (
         <span>{content}</span>
+      )}
+
+      {isDel && onDelete && (
+        <button onClick={onDelete} style={{ margin: "5px" }}>
+          Delete
+        </button>
       )}
     </div>
   );

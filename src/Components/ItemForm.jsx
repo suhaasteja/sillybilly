@@ -7,7 +7,7 @@ const ItemForm = ({ addItem }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (itemName.trim() && itemPrice.trim()) {
-      addItem(itemName.trim(), parseFloat(itemPrice).toFixed(2));
+      addItem(itemName.trim(), parseFloat(itemPrice).toFixed(3));
       setItemName("");
       setItemPrice("");
     }

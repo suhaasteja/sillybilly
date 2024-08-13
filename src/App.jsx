@@ -10,7 +10,7 @@ function App() {
     ["Item 2", "20.00", 0, 0],
   ]);
 
-  const [members, setMembers] = useState(["Alice", "Bob"]);
+  const [members, setMembers] = useState(["sigma", "skibidi"]);
   const [splitData, setSplitData] = useState(
     tableContent.map(() =>
       members.map(() => ({ isChecked: false, splitAmount: 0 }))
@@ -19,12 +19,10 @@ function App() {
 
   const [totalSplits, setTotalSplits] = useState(null); 
 
-  
   const addMember = (newMemberName) => {
     if (!newMemberName.trim()) return;
     setMembers((prevMembers) => [...prevMembers, newMemberName]);
 
-    
     setSplitData((prevSplitData) =>
       prevSplitData.map((rowSplits) => [
         ...rowSplits,
@@ -33,21 +31,18 @@ function App() {
     );
   };
 
-  
   const addItem = (itemName, itemPrice) => {
     if (!itemName.trim() || !itemPrice.trim()) return;
 
     const newRow = [itemName, itemPrice];
     setTableContent((prevTableContent) => [...prevTableContent, newRow]);
 
-    
     setSplitData((prevSplitData) => [
       ...prevSplitData,
       members.map(() => ({ isChecked: false, splitAmount: 0 })),
     ]);
   };
 
-  
   const editMember = (index, newName) => {
     setMembers((prevMembers) => {
       const updatedMembers = [...prevMembers];
@@ -56,40 +51,79 @@ function App() {
     });
   };
 
-  
   const deleteMember = (index) => {
     setMembers((prevMembers) => prevMembers.filter((_, i) => i !== index));
-    setSplitData((prevSplitData) =>
-      prevSplitData.map((rowSplits) => rowSplits.filter((_, i) => i !== index))
-    );
-  };
-
   
-  const toggleMemberForAllSplits = (memberIndex, isChecked) => {
     setSplitData((prevSplitData) =>
       prevSplitData.map((rowSplits) => {
-        const updatedSplits = [...rowSplits];
-        updatedSplits[memberIndex].isChecked = isChecked;
-
-        
-        const checkedCount = updatedSplits.filter((split) => split.isChecked).length;
-        const splitAmount = checkedCount > 0 ? parseFloat(rowSplits[0].splitAmount) : 0;
-        updatedSplits.forEach((split, i) => {
-          split.splitAmount = split.isChecked ? splitAmount : 0;
-        });
-
-        return updatedSplits;
+        // Remove the member's split data from the current row
+        const updatedRowSplits = rowSplits.filter((_, i) => i !== index);
+  
+        // Recalculate the splitAmount for the remaining members in this row
+        const checkedCount = updatedRowSplits.filter((split) => split.isChecked).length;
+        const splitAmount = checkedCount > 0 ? parseFloat(rowSplits[0].itemPrice) / checkedCount : 0;
+  
+        // Update the splitAmount for each remaining split
+        return updatedRowSplits.map((split) => ({
+          ...split,
+          splitAmount: split.isChecked ? splitAmount : 0,
+        }));
+      })
+    );
+  
+    // Update tableContent to remove the deleted member's column
+    setTableContent((prevTableContent) =>
+      prevTableContent.map((row) => {
+        const [item, price, ...rest] = row;
+        return [item, price, ...rest.filter((_, i) => i !== index)];
       })
     );
   };
-
   
+  
+  
+  
+
+  const toggleMemberForAllSplits = (memberIndex, isChecked) => {
+    setSplitData((prevSplitData) =>
+      prevSplitData.map((rowSplits) => {
+        if (rowSplits[memberIndex]) {
+          rowSplits[memberIndex].isChecked = isChecked;
+  
+          // Calculate the new split amount
+          const itemPrice = parseFloat(tableContent[0][1]);
+          const checkedCount = rowSplits.filter((split) => split.isChecked).length;
+          const splitAmount = checkedCount > 0 ? itemPrice / checkedCount : 0;
+  
+          // Update all splits in this row
+          return rowSplits.map((split, index) => {
+            if (index === memberIndex) {
+              return {
+                ...split,
+                splitAmount: split.isChecked ? splitAmount : 0,
+              };
+            }
+            return split;
+          });
+        }
+        return rowSplits;
+      })
+    );
+  };
+  
+  
+
   useEffect(() => {
     const totals = members.map((_, memberIndex) =>
-      splitData.reduce((sum, rowSplits) => sum + rowSplits[memberIndex].splitAmount, 0)
+      splitData.reduce((sum, rowSplits) => {
+        const splitAmount = rowSplits[memberIndex]?.splitAmount || 0;
+        return sum + splitAmount;
+      }, 0)
     );
-    setTotalSplits(totals); 
+    setTotalSplits(totals);
   }, [splitData, members, tableContent]);
+  
+  
 
   return (
     <div>
@@ -101,17 +135,7 @@ function App() {
         members={members}
         splitData={splitData}
         setSplitData={setSplitData}
-        onEdit={(rowIndex, colIndex, newValue) => {
-          const updatedContent = [...tableContent];
-          updatedContent[rowIndex][colIndex] = newValue;
-          setTableContent(updatedContent);
-        }}
-        onDelete={(rowIndex) => {
-          const updatedContent = tableContent.filter((_, i) => i !== rowIndex);
-          setTableContent(updatedContent);
-          const updatedSplits = splitData.filter((_, i) => i !== rowIndex);
-          setSplitData(updatedSplits);
-        }}
+        setTableContent={setTableContent} 
         onEditMember={editMember}      
         onDeleteMember={deleteMember}  
         onToggleMember={toggleMemberForAllSplits} 
